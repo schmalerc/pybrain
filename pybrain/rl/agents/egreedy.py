@@ -17,6 +17,9 @@ class EpsilonGreedyAgent(LearningAgent):
         # explore by chance
         if random.random() < self.epsilon:
             action = array([random.randint(self.module.numActions)])
+
+        # setting finally chosen action
+        self.lastaction = action
         
         # reduce epsilon
         self.epsilon *= self.epsilondecay
