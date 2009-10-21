@@ -12,14 +12,14 @@ from pybrain.tools.shortcuts import buildNetwork
 from pybrain.rl.environments.cartpole import CartPoleEnvironment, CartPoleRenderer, BalanceTask
 from pybrain.rl.agents.learning import LearningAgent
 from pybrain.rl.experiments import EpisodicExperiment
-from scipy import array, mean
+from scipy import mean
 import sys
 
 episodes = 100
 epilen = 200
 
 if len(sys.argv) < 5:
-    sys.exit('please give 4 parameters. run: "python play.py <p1> <p2> <p3> <p4>"\n')
+    sys.exit('please give 4 parameters. run: "python play_catpole.py <p1> <p2> <p3> <p4>"\n')
      
 # create environment
 env = CartPoleEnvironment()    
@@ -34,7 +34,7 @@ net = buildNetwork(4, 1, bias=False)
 # set parameters from command line
 # create agent
 agent = LearningAgent(net, None)
-agent.module._setParameters(array([float(sys.argv[1]), float(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4])])) 
+agent.module._setParameters([float(sys.argv[1]), float(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4])]) 
 agent.disableLearning()
 # create experiment
 experiment = EpisodicExperiment(task, agent)

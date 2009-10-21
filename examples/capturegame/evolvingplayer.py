@@ -3,11 +3,11 @@ which uses a MDRNN as network, with a simple ES algorithm."""
 
 __author__ = 'Tom Schaul, tom@idsia.ch'
 
-from pybrain.rl.tasks.capturegame import CaptureGameTask
+from pybrain.rl.environments.twoplayergames import CaptureGameTask
 from pybrain.structure.evolvables.cheaplycopiable import CheaplyCopiable
-from pybrain.rl.learners import ES
+from pybrain.optimization import ES
 from pybrain.utilities import storeCallResults
-from pybrain.rl.agents.capturegameplayers.killing import KillingPlayer
+from pybrain.rl.environments.twoplayergames.capturegameplayers.killing import KillingPlayer
 
 # task settings: opponent, averaging to reduce noise, board size, etc.
 size = 5
@@ -30,8 +30,10 @@ else:
 net = CheaplyCopiable(net)
 print net.name, 'has', net.paramdim, 'trainable parameters.'
 
-learner = ES(task, net, mu = 5, lambada = 5, verbose = True, noisy = True)
-newnet, f = learner.learn(50)
+learner = ES(task, net, mu = 5, lambada = 5, 
+             verbose = True, evaluatorIsNoisy = True,
+             maxEvaluations = 50)
+newnet, f = learner.learn()
 
 # now, let's take the result, and compare it's performance on a larger game-baord (to the original one)
 newsize = 7
@@ -46,6 +48,6 @@ print 'New net on big board score:', newtask(bignew)
 
 
 # plot the progression
-from pylab import plot, show #@UnresolvedImport
+from pylab import plot, show
 plot(res)
 show()

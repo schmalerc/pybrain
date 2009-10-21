@@ -4,17 +4,16 @@
 """Unittests for the arac.pybrainbridge module."""
 
 
-__author__ = 'Justin S Bayer, bayer.justin@googlemail.com'
+__author__ = 'Justin S Bayer, bayer.justin@googlemail.com' 
 
 
-import copy
 import unittest
 
 import scipy
 
-import arac.pybrainbridge as pybrainbridge
+import arac.pybrainbridge as pybrainbridge #@UnresolvedImport
 
-from arac.tests.common import TestCase
+from arac.tests.common import TestCase #@UnresolvedImport
 
 from pybrain.structure import (
     LinearLayer, 

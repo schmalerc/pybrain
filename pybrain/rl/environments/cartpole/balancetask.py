@@ -1,13 +1,17 @@
 __author__ = 'Thomas Rueckstiess and Tom Schaul'
 
-from pybrain.rl.environments.cartpole.nonmarkovpole import NonMarkovPoleEnvironment
-from pybrain.rl.tasks import EpisodicTask
-from cartpole import CartPoleEnvironment
 from scipy import pi, dot, array
 
-class BalanceTask(EpisodicTask):
+from pybrain.rl.environments.cartpole.nonmarkovpole import NonMarkovPoleEnvironment
+from pybrain.rl.environments import EpisodicTask
+from cartpole import CartPoleEnvironment
 
+
+class BalanceTask(EpisodicTask):
     """ The task of balancing some pole(s) on a cart """
+    
+    desiredValue = 0
+    
     def __init__(self, env = None, maxsteps = 1000):
         """
         @param env: (optional) an instance of a CartPoleEnvironment (or a subclass thereof)
@@ -29,7 +33,7 @@ class BalanceTask(EpisodicTask):
         
         self.sensor_limits = [None]*4
         # actor between -10 and 10 Newton
-        self.actor_limits = [(-10, 10)]
+        self.actor_limits = [(-50, 50)]
         
     def reset(self):
         EpisodicTask.reset(self)
@@ -72,7 +76,6 @@ class JustBalanceTask(BalanceTask):
     def getReward(self):
         angles = map(abs, self.env.getPoleAngles())
         s = abs(self.env.getCartPosition())
-        reward = 0
         if min(angles) < 0.05:
             reward = 0
         elif max(angles) > 0.7 or abs(s) > 2.4:
@@ -80,6 +83,7 @@ class JustBalanceTask(BalanceTask):
         else: 
             reward = -1
         return reward
+    
         
 class EasyBalanceTask(BalanceTask):
     """ this task is a bit easier to learn because it gives gradual feedback
@@ -87,7 +91,6 @@ class EasyBalanceTask(BalanceTask):
     def getReward(self):
         angles = map(abs, self.env.getPoleAngles())
         s = abs(self.env.getCartPosition())
-        reward = 0
         if min(angles) < 0.05 and abs(s) < 0.05:
             reward = 0
         elif max(angles) > 0.7 or abs(s) > 2.4:
@@ -95,6 +98,67 @@ class EasyBalanceTask(BalanceTask):
         else: 
             reward = -abs(s)/2
         return reward   
+    
+    
+
+class DiscreteBalanceTask(BalanceTask):
+    """ here there are 3 discrete actions, left, right, nothing. """
+    
+    def __init__(self, env = None, maxsteps = 1000):
+        """
+        @param env: (optional) an instance of a CartPoleEnvironment (or a subclass thereof)
+        @param maxsteps: maximal number of steps (default: 1000) 
+        """
+        if env == None:
+            env = CartPoleEnvironment()
+        EpisodicTask.__init__(self, env) 
+        self.N = maxsteps
+        self.t = 0
+        
+        # no scaling of sensors
+        self.sensor_limits = [None]*2
+        
+        # scale actor
+        self.actor_limits = [(-50, 50)]
+
+        
+    def getObservation(self):
+        """ a filtered mapping to getSample of the underlying environment. """
+        sensors = self.env.getSensors()[:2]   
+        if self.sensor_limits:
+            sensors = self.normalize(sensors)
+        return sensors
+        
+    def performAction(self, action):
+        action = action-1.
+        BalanceTask.performAction(self, action)
+    
+    def getReward(self):
+        angles = map(abs, self.env.getPoleAngles())
+        s = abs(self.env.getCartPosition())
+        if min(angles) < 0.05:
+            reward = 1.0
+        elif max(angles) > 0.7 or abs(s) > 2.4:
+            reward = -1. * (self.N - self.t)
+        else: 
+            reward = 0.0
+        return reward
+
+
+
+
+class DiscreteNoHelpTask(DiscreteBalanceTask):
+    def getReward(self):
+        angles = map(abs, self.env.getPoleAngles())
+        s = abs(self.env.getCartPosition())
+        if max(angles) > 0.7 or abs(s) > 2.4:
+            reward = -1. * (self.N - self.t)
+        else: 
+            reward = 0.0
+        return reward   
+    
+
+
 
 class LinearizedBalanceTask(BalanceTask):
     """ Here we follow the setup in
@@ -106,8 +170,7 @@ class LinearizedBalanceTask(BalanceTask):
     def getReward(self):
         return dot(self.env.sensors**2, self.Q) + self.env.action[0]**2*0.01
     
-    def isFinished(self):
-        
+    def isFinished(self):        
         if abs(self.env.getPoleAngles()[0]) > 0.5235988:  # pi/6
             # pole has fallen
             return True
@@ -118,3 +181,4 @@ class LinearizedBalanceTask(BalanceTask):
             # maximal timesteps
             return True
         return False
+    

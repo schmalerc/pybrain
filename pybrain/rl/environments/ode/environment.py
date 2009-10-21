@@ -2,8 +2,8 @@ __author__ = 'Thomas Rueckstiess, ruecksti@in.tum.de'
 
 import sys, time
 from scipy import random, asarray
-import xode.parser, xode.body, xode.geom #@Reimport @UnusedImport
-import ode
+import xode.parser, xode.body, xode.geom #@UnresolvedImport @UnusedImport @Reimport
+import ode #@UnresolvedImport
 
 from pybrain.rl.environments.graphical import GraphicalEnvironment
 from tools.configgrab import ConfigGrabber
@@ -554,7 +554,7 @@ class ODEEnvironment(GraphicalEnvironment):
 if __name__ == '__main__' :
     """
     little example on how to use the virtual world.
-    Synopsis: python odeenvironment.py [modelname]
+    Synopsis: python environment.py [modelname]
     Parameters: modelname = base name of the xode file to use (default: johnnie)
     """
 

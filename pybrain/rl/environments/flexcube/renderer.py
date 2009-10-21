@@ -28,7 +28,7 @@ from OpenGL.GLUT import * #@UnusedWildImport
 from OpenGL.GL import * #@UnusedWildImport
 from OpenGL.GLE import * #@UnusedWildImport
 from OpenGL.GLU import * #@UnusedWildImport
-import objects3D
+import objects3d
 from time import sleep
 from scipy import ones, array
 from pybrain.tools.networking.udpconnection import UDPClient
@@ -66,7 +66,7 @@ class FlexCubeRenderer(object):
   
     # If self.savePics=True this method saves the produced images      
     def saveTo( self, filename, format="JPEG" ):
-        import Image # get PIL's functionality...
+        import Image # get PIL's functionality... @UnresolvedImport
         width, height = 800,600
         glPixelStorei(GL_PACK_ALIGNMENT, 1)
         data = glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE)
@@ -80,7 +80,7 @@ class FlexCubeRenderer(object):
     def _render(self):
         # Call init: Parameter(Window Position -> x, y, height, width)
         self.init_GL(self,300,300,800,600)    
-        self.object = objects3D.Objects3D()
+        self.object = objects3d.Objects3D()
         self.quad = gluNewQuadric()
         glutMainLoop()
 

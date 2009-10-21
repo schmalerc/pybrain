@@ -3,12 +3,11 @@ __author__ = 'Tom Schaul, tom@idsia.ch'
 from scipy import zeros, array, ndarray
 
 from pybrain.rl.environments import Environment
-from pybrain.utilities import abstractMethod
-from pybrain.rl.evaluator import Evaluator
 from pybrain.structure.parametercontainer import ParameterContainer
+from pybrain.rl.environments.fitnessevaluator import FitnessEvaluator
 
 
-class FunctionEnvironment(Environment, Evaluator):
+class FunctionEnvironment(Environment, FitnessEvaluator):
     """ A n-to-1 mapping function to be with a single minimum of value zero, at xopt. """
     
     # what input dimensions can the function have?
@@ -19,33 +18,28 @@ class FunctionEnvironment(Environment, Evaluator):
     # the (single) point where f = 0
     xopt = None
     
-    # what would be the desired performance?
-    desiredValue = -1e-10
+    # what would be the desired performance? by default: something close to zero
+    desiredValue = 1e-10
+    toBeMinimized = True
     
     def __init__(self, xdim = None, xopt = None):
-        if xdim == None:
+        if xdim is None:
             xdim = self.xdim
-        if xdim == None:
+        if xdim is None:
             xdim = self.xdimMin
-        assert xdim >= self.xdimMin and not (self.xdimMax != None and xdim > self.xdimMax)
+        assert xdim >= self.xdimMin and not (self.xdimMax is not None and xdim > self.xdimMax)
         self.xdim = xdim
-        if xopt == None:
+        if xopt is None:
             self.xopt = zeros(self.xdim)
         else:
             self.xopt = xopt
         self.reset()
-        
-    def f(self, x):
-        """ the function itself, to be defined by subclasses """
-        abstractMethod()
 
     def __call__(self, x):
-        """ the f(x) is to be minimized, but evaluators assume that 
-        goal is maximization, so we negate the result here"""
         if isinstance(x, ParameterContainer):
             x = x.params
-        assert type(x) == ndarray
-        return -self.f(x)
+        assert type(x) == ndarray, 'FunctionEnvironment: Input not understood: '+str(type(x))
+        return self.f(x)
     
     # methods for conforming to the Environment interface:
     def reset(self):
@@ -54,7 +48,7 @@ class FunctionEnvironment(Environment, Evaluator):
     def getSensors(self):
         """ the one sensor is the function result. """
         tmp = self.result
-        assert tmp != None
+        assert tmp is not None
         self.result = None
         return array([tmp])
                     
@@ -66,12 +60,7 @@ class FunctionEnvironment(Environment, Evaluator):
     def indim(self):
         return self.xdim
     
-    outdim = 1
+    # does not provide any observations
+    outdim = 0
     
     
-class OppositeFunction(FunctionEnvironment):
-    """ the opposite of a function """
-    def __init__(self, basef):
-        FunctionEnvironment.__init__(self, basef.xdim, basef.xopt)
-        self.f = lambda x: -basef.f(x)
-        
