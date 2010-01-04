@@ -1,14 +1,12 @@
 #!/usr/bin/python
 
 from pybrain import *
-#from pybrain.agents.continuousAgents import RandomAgent 
 from pybrain.rl.environments import Environment
 from pybrain.rl.environments.episodic import EpisodicTask
 from pybrain.rl.experiments import EpisodicExperiment
 from scipy import array, mean,ones
 import random as rnd
 from pybrain.rl.learners import *
-from pybrain.structure import SigmoidLayer
 from pybrain.rl.learners.valuebased.interface import ActionValueTable
 from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners import Q, QLambda, SARSA
