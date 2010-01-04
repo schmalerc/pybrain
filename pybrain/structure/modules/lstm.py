@@ -33,9 +33,12 @@ class LSTMLayer(NeuronLayer, ParameterContainer):
     
 
     def __init__(self, dim, peepholes = False, name = None):
+        """ 
+        :arg dim: number of cells
+        :key peepholes: enable peephole connections (from state to gates)? """
         self.setArgs(dim = dim, peepholes = peepholes)
         
-        # Internal buffers:
+        # Internal buffers, created dynamically:
         self.bufferlist = [
             ('ingate', dim),
             ('outgate', dim),

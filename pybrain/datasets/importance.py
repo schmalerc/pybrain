@@ -20,10 +20,11 @@ class ImportanceDataSet(SequentialDataSet):
         
     def addSample(self, inp, target, importance=None):
         """ adds a new sample consisting of input, target and importance.
-            @param input: the input of the sample
-            @param target: the target of the sample
-            @param importance: the importance of the sample. If left None, the
-            importance will be set to 1.0 
+        
+            :arg inp: the input of the sample
+            :arg target: the target of the sample
+            :key importance: the importance of the sample. If left None, the
+                 importance will be set to 1.0 
         """
         if importance == None:
             importance = ones(len(target))

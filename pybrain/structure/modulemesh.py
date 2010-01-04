@@ -9,8 +9,8 @@ class ModuleMesh(Named):
     All modules need to have the same indim and outdim """
     
     def __init__(self, constructor, dimensions, name = None, baserename = False):
-        """ @param constructor: a constructor method that returns a module
-        @param dimensions: tuple of dimensions. """
+        """:arg constructor: a constructor method that returns a module
+        :arg dimensions: tuple of dimensions. """
         self.dims = dimensions
         if name != None:
             self.name = name
@@ -33,7 +33,7 @@ class ModuleMesh(Named):
     
     @staticmethod
     def viewOnFlatLayer(layer, dimensions, name = None):
-        """  """
+        """ Produces a ModuleMesh that is a mesh-view on a flat module. """
         assert max(dimensions) > 1, "At least one dimension needs to be larger than one."
         def slicer():            
             nbunits = reduce(lambda x, y: x*y, dimensions, 1)

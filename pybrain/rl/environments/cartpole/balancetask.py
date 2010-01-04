@@ -8,15 +8,13 @@ from cartpole import CartPoleEnvironment
 
 
 class BalanceTask(EpisodicTask):
-    """ The task of balancing some pole(s) on a cart """
-    
-    desiredValue = 0
-    
-    def __init__(self, env = None, maxsteps = 1000):
+    """ The task of balancing some pole(s) on a cart """   
+    def __init__(self, env=None, maxsteps=1000, desiredValue = 0):
         """
-        @param env: (optional) an instance of a CartPoleEnvironment (or a subclass thereof)
-        @param maxsteps: maximal number of steps (default: 1000) 
+        :key env: (optional) an instance of a CartPoleEnvironment (or a subclass thereof)
+        :key maxsteps: maximal number of steps (default: 1000) 
         """
+        self.desiredValue = desiredValue
         if env == None:
             env = CartPoleEnvironment()
         EpisodicTask.__init__(self, env) 
@@ -25,13 +23,13 @@ class BalanceTask(EpisodicTask):
         
         # scale position and angle, don't scale velocities (unknown maximum)
         self.sensor_limits = [(-3, 3)]#, None, (-pi, pi), None]
-        for i in range(1,self.outdim):
-            if isinstance(self.env, NonMarkovPoleEnvironment) and i%2 == 0:
+        for i in range(1, self.outdim):
+            if isinstance(self.env, NonMarkovPoleEnvironment) and i % 2 == 0:
                 self.sensor_limits.append(None)
             else:
                 self.sensor_limits.append((-pi, pi))
         
-        self.sensor_limits = [None]*4
+        self.sensor_limits = [None] * 4
         # actor between -10 and 10 Newton
         self.actor_limits = [(-50, 50)]
         
@@ -96,7 +94,7 @@ class EasyBalanceTask(BalanceTask):
         elif max(angles) > 0.7 or abs(s) > 2.4:
             reward = -2 * (self.N - self.t)
         else: 
-            reward = -abs(s)/2
+            reward = -abs(s) / 2
         return reward   
     
     
@@ -104,10 +102,10 @@ class EasyBalanceTask(BalanceTask):
 class DiscreteBalanceTask(BalanceTask):
     """ here there are 3 discrete actions, left, right, nothing. """
     
-    def __init__(self, env = None, maxsteps = 1000):
+    def __init__(self, env=None, maxsteps=1000):
         """
-        @param env: (optional) an instance of a CartPoleEnvironment (or a subclass thereof)
-        @param maxsteps: maximal number of steps (default: 1000) 
+        :key env: (optional) an instance of a CartPoleEnvironment (or a subclass thereof)
+        :key maxsteps: maximal number of steps (default: 1000) 
         """
         if env == None:
             env = CartPoleEnvironment()
@@ -116,7 +114,7 @@ class DiscreteBalanceTask(BalanceTask):
         self.t = 0
         
         # no scaling of sensors
-        self.sensor_limits = [None]*2
+        self.sensor_limits = [None] * 2
         
         # scale actor
         self.actor_limits = [(-50, 50)]
@@ -130,7 +128,7 @@ class DiscreteBalanceTask(BalanceTask):
         return sensors
         
     def performAction(self, action):
-        action = action-1.
+        action = action - 1.
         BalanceTask.performAction(self, action)
     
     def getReward(self):
@@ -168,7 +166,7 @@ class LinearizedBalanceTask(BalanceTask):
     Q = array([12., 0.25, 1.25, 1.0])
     
     def getReward(self):
-        return dot(self.env.sensors**2, self.Q) + self.env.action[0]**2*0.01
+        return dot(self.env.sensors ** 2, self.Q) + self.env.action[0] ** 2 * 0.01
     
     def isFinished(self):        
         if abs(self.env.getPoleAngles()[0]) > 0.5235988:  # pi/6
@@ -182,3 +180,4 @@ class LinearizedBalanceTask(BalanceTask):
             return True
         return False
     
+

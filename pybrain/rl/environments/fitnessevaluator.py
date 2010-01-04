@@ -15,11 +15,12 @@ class FitnessEvaluator(object):
     toBeMinimized = False    
     
     def f(self, x):
-        """ the function itself, to be defined by subclasses """
+        """ The function itself, to be defined by subclasses """
         abstractMethod()
 
     def __call__(self, x):
         """ All FitnessEvaluators are callable.
-        @return: float """
+        
+        :return: float """
         return self.f(x)
     

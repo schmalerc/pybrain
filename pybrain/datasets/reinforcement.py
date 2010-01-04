@@ -32,16 +32,17 @@ class ReinforcementDataSet(SequentialDataSet):
         self.outdim = self.actiondim
     
     def addSample(self, state, action, reward):
-        """ adds a new sample consisting of state, action, reward. 
-            @param state: the current state of the world
-            @param action: the executed action by the agent
-            @param reward: the reward received for action in state """
+        """ adds a new sample consisting of state, action, reward.
+        
+            :key state: the current state of the world
+            :key action: the executed action by the agent
+            :key reward: the reward received for action in state """
         self.appendLinked(state, action, reward)
  
     def getSumOverSequences(self, field):
         sums = zeros((self.getNumSequences(), self.getDimension(field)))
         for n in range(self.getNumSequences()):
-            sums[n,:] = sum(self._getSequenceField(n,field), 0)       
+            sums[n, :] = sum(self._getSequenceField(n, field), 0)       
         return sums
         
     def __reduce__(self):

@@ -1,21 +1,20 @@
-# $Id$
-
 from __future__ import with_statement
 
 __author__ = 'Thomas Rueckstiess, ruecksti@in.tum.de'
 
 import random
 import pickle
-
 from itertools import chain
-
 from scipy import zeros, resize, ravel, asarray
+import scipy
 
 from pybrain.utilities import Serializable
+
 
 class OutOfSyncError(Exception): pass
 class VectorFormatError(Exception): pass
 class NoLinkedFieldsError(Exception): pass
+
 
 class DataSet(Serializable):
     """DataSet is a general base class for other data set classes 
@@ -57,7 +56,8 @@ class DataSet(Serializable):
         
     def setVectorFormat(self, vf):
         """Determine which format to use for returning vectors. Use the property vectorformat.
-            @param type: possible types are '1d', '2d', 'list' 
+        
+            :key type: possible types are '1d', '2d', 'list' 
                   '1d' - example: array([1,2,3])
                   '2d' - example: array([[1,2,3]])
                 'list' - example: [1,2,3]
@@ -184,7 +184,7 @@ class DataSet(Serializable):
         """Increase the buffer size. It should always be one longer than the
         current sequence length and double on every growth step."""
         shape = list(a.shape)
-        shape[0] = (shape[0]+1) * 2
+        shape[0] = (shape[0] + 1) * 2
         return resize(a, shape)
             
     def _appendUnlinked(self, label, row):
@@ -195,7 +195,7 @@ class DataSet(Serializable):
         if self.data[label].shape[0] <= self.endmarker[label]:
             self._resize(label)
          
-        self.data[label][self.endmarker[label],:] = row
+        self.data[label][self.endmarker[label], :] = row
         self.endmarker[label] += 1
 
     def append(self, label, row):
@@ -212,7 +212,7 @@ class DataSet(Serializable):
     def appendLinked(self, *args):
         """Add rows to all linked fields at once."""
         assert len(args) == len(self.link)
-        for i,l in enumerate(self.link):
+        for i, l in enumerate(self.link):
             self._appendUnlinked(l, args[i])
      
     def getLinked(self, index=None):
@@ -291,7 +291,7 @@ class DataSet(Serializable):
     def reconstruct(cls, filename):
         """Read an incomplete data set (option arraysonly) into the given one. """
         # FIXME: Obsolete! Kept here because of some old files...
-        obj = cls(1,1)
+        obj = cls(1, 1)
         for key, val in pickle.load(file(filename)).iteritems():
             obj.setField(key, val)
         return obj
@@ -301,7 +301,7 @@ class DataSet(Serializable):
         if compact:
             # remove padding of zeros for each field
             for field in self.getFieldNames():
-                temp = self[field][0:self.endmarker[field]+1,:]
+                temp = self[field][0:self.endmarker[field] + 1, :]
                 self.setField(field, temp)
         Serializable.save_pickle(self, flo, protocol)
 
@@ -356,5 +356,13 @@ class DataSet(Serializable):
         """Like .batches(), but the order is random."""
         permutation = random.shuffle(range(len(self)))
         return self.batches(label, n, permutation)
-                      
-        
+
+    def replaceNansByMeans(self):
+        """Replace all not-a-number entries in the dataset by the means of the
+        corresponding column."""
+        for d in self.data.itervalues():
+            means = scipy.nansum(d[:self.getLength()], axis=0) / self.getLength()
+            for i in xrange(self.getLength()):
+                for j in xrange(ds.dim):
+                    if not scipy.isfinite(d[i, j]):
+                        d[i, j] = means[j]

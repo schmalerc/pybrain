@@ -9,6 +9,10 @@ from pybrain.structure.parametercontainer import ParameterContainer
 from pybrain.rl.environments.functions.function import FunctionEnvironment
 from pybrain.rl.environments.fitnessevaluator import FitnessEvaluator
 from pybrain.rl.environments.functions.transformations import oppositeFunction
+from pybrain.structure.evolvables.maskedmodule import MaskedModule
+from pybrain.structure.evolvables.maskedparameters import MaskedParameters
+from pybrain.structure.evolvables.topology import TopologyEvolvable
+from pybrain.structure.modules.module import Module
 
 
 class BlackBoxOptimizer(DirectSearchLearner):
@@ -20,44 +24,52 @@ class BlackBoxOptimizer(DirectSearchLearner):
     or subclasses of Evolvable (that define its methods).
     """    
     
-    # Minimize cost or maximize fitness? By default, all functions are maximized
-    minimize = None
+    
     # some algorithms are designed for minimization only, those can put this flag:
     mustMinimize = False
     mustMaximize = False
-
-    # Is there a known value of sufficient fitness?
+        
+    #: Is there a known value of sufficient fitness?
     desiredEvaluation = None    
 
-    # dimension of the search space, if applicable
+    #: Stopping criterion based on number of evaluations.    
+    maxEvaluations = 1e6 
+        
+    #: Stopping criterion based on number of learning steps. 
+    maxLearningSteps = None    
+    
+    
+    #: dimension of the search space, if applicable
     numParameters = None
     
-    # Bookkeeping settings
+    #: Store all evaluations (in the ._allEvaluations list)?
     storeAllEvaluations = False
+    #: Store all evaluated instances (in the ._allEvaluated list)?
     storeAllEvaluated = False
     
     # an optimizer can take different forms of evaluables, and depending on its
     # needs, wrap them into a ParameterContainer (which is also an Evolvable)
     # or unwrap them to act directly on the array of parameters (all ContinuousOptimizers)
-    wasWrapped = False
-    wasUnwrapped = False
-    wasOpposed = False
-    
-    # stopping criteria
-    maxEvaluations = 1e6
-    maxLearningSteps = None    
-    
-    # providing information during the learning
+    _wasWrapped = False
+    _wasUnwrapped = False
+    _wasOpposed = False
+        
     listener = None
+    
+    #: provide console output during learning
     verbose = False
     
     # some algorithms have a predetermined (minimal) number of 
     # evaluations they will perform during each learningStep:
     batchSize = 1
     
+    
     def __init__(self, evaluator = None, initEvaluable = None, **kwargs):
-        """ The evaluator is any callable object (e.g. a lambda function). """
+        """ The evaluator is any callable object (e.g. a lambda function). 
+        Algorithm parameters can be set here if provided as keyword arguments. """
         # set all algorithm-specific parameters in one go:
+        self.__minimize = None
+        self.__evaluator = None
         setAllArgs(self, kwargs)
         # bookkeeping
         self.numEvaluations = 0      
@@ -67,49 +79,69 @@ class BlackBoxOptimizer(DirectSearchLearner):
             self._allEvaluations = []
         elif self.storeAllEvaluations:
             self._allEvaluations = []
-            
+        
         if evaluator is not None:
-            self.setEvaluator(evaluator, initEvaluable)
-        else:
-            self.__evaluator = None
+            self.setEvaluator(evaluator, initEvaluable)        
+            
+    def _getMinimize(self): return self.__minimize
+            
+    def _setMinimize(self, flag):
+        """ Minimization vs. maximization: priority to algorithm requirements, 
+        then evaluator, default = maximize."""
+        self.__minimize = flag
+        opp = False
+        if flag is True:
+            if self.mustMaximize:
+                opp = True
+                self.__minimize = False
+        if flag is False:
+            if self.mustMinimize:
+                opp = True
+                self.__minimize = True       
+        if self.__evaluator is not None:
+            if opp is not self._wasOpposed: 
+                self._flipDirection()
+        self._wasOpposed = opp
+        
+    #: Minimize cost or maximize fitness? By default, all functions are maximized.    
+    minimize = property(_getMinimize, _setMinimize)
         
     def setEvaluator(self, evaluator, initEvaluable = None):
+        """ If not provided upon construction, the objective function can be given through this method.
+        If necessary, also provide an initial evaluable."""
+        
         # default settings, if provided by the evaluator:
         if isinstance(evaluator, FitnessEvaluator):
             if self.desiredEvaluation is None:
                 self.desiredEvaluation = evaluator.desiredValue               
             if self.minimize is None:
                 self.minimize = evaluator.toBeMinimized 
-            if self.numParameters is None:
-                # in some cases, we can deduce the dimension from the provided evaluator:
-                if isinstance(evaluator, FunctionEnvironment):
+            # in some cases, we can deduce the dimension from the provided evaluator:
+            if isinstance(evaluator, FunctionEnvironment):
+                if self.numParameters is None:            
                     self.numParameters = evaluator.xdim
-        
-        # minimization vs. maximization: priority to algorithm requirements, then evaluator, default = maximize
-        if self.mustMinimize:
-            if self.minimize is not True:
-                self.wasOpposed = True
-            self.minimize = True
-            assert not self.mustMaximize
-        if self.mustMaximize:
-            if self.minimize is True:
-                self.wasOpposed = True
-            self.minimize = False
+                elif self.numParameters is not evaluator.xdim:
+                    raise ValueError("Parameter dimension mismatch: evaluator expects "+str(evaluator.xdim)\
+                                     +" but it was set to "+str(self.numParameters)+".")
+                
+        # default: maximize
         if self.minimize is None:
             self.minimize = False
-                                
-        if self.wasOpposed:
-            self.__evaluator = oppositeFunction(evaluator)
-            if self.desiredEvaluation is not None:
-                self.desiredEvaluation *= -1
-        else:
-            self.__evaluator = evaluator        
-                              
+        
+        self.__evaluator = evaluator
+        if self._wasOpposed:
+            self._flipDirection()
+                                      
         #set the starting point for optimization (as provided, or randomly)
         self._setInitEvaluable(initEvaluable)        
         self.bestEvaluation = None
         self._additionalInit()
         self.bestEvaluable = self._initEvaluable
+        
+    def _flipDirection(self):
+        self.__evaluator = oppositeFunction(self.__evaluator)
+        if self.desiredEvaluation is not None:
+            self.desiredEvaluation *= -1        
         
     def _additionalInit(self):
         """ a method for subclasses that need additional initialization code but don't want to redefine __init__ """
@@ -131,11 +163,16 @@ class BlackBoxOptimizer(DirectSearchLearner):
         if isinstance(evaluable, ndarray):            
             pc = ParameterContainer(len(evaluable))
             pc._setParameters(evaluable)
-            self.wasWrapped = True
+            self._wasWrapped = True
             evaluable = pc
         self._initEvaluable = evaluable
         if isinstance(self._initEvaluable, ParameterContainer):
-            self.numParameters = len(self._initEvaluable)      
+            if self.numParameters is None:            
+                self.numParameters = len(self._initEvaluable)
+            elif self.numParameters is not len(self._initEvaluable):
+                raise ValueError("Parameter dimension mismatch: evaluator expects "+str(self.numParameters)\
+                                 +" but the evaluable has "+str(len(self._initEvaluable))+".")
+                  
     
     def learn(self, additionalLearningSteps = None):
         """ The main loop that does the learning. """
@@ -158,8 +195,8 @@ class BlackBoxOptimizer(DirectSearchLearner):
         
     def _bestFound(self):
         """ return the best found evaluable and its associated fitness. """
-        bestE = self.bestEvaluable.params.copy() if self.wasWrapped else self.bestEvaluable
-        if self.wasOpposed and isscalar(self.bestEvaluation):
+        bestE = self.bestEvaluable.params.copy() if self._wasWrapped else self.bestEvaluable
+        if self._wasOpposed and isscalar(self.bestEvaluation):
             bestF = -self.bestEvaluation
         else:
             bestF = self.bestEvaluation
@@ -167,10 +204,10 @@ class BlackBoxOptimizer(DirectSearchLearner):
         
     def _oneEvaluation(self, evaluable):
         """ This method should be called by all optimizers for producing an evaluation. """
-        if self.wasUnwrapped:
+        if self._wasUnwrapped:
             self.wrappingEvaluable._setParameters(evaluable)
             res = self.__evaluator(self.wrappingEvaluable)
-        elif self.wasWrapped:            
+        elif self._wasWrapped:            
             res = self.__evaluator(evaluable.params)
         else:            
             res = self.__evaluator(evaluable)
@@ -178,7 +215,6 @@ class BlackBoxOptimizer(DirectSearchLearner):
             # detect numerical instability
             if isnan(res) or isinf(res):
                 raise DivergenceError
-                
             # always keep track of the best
             if (self.numEvaluations == 0
                 or self.bestEvaluation is None
@@ -191,14 +227,14 @@ class BlackBoxOptimizer(DirectSearchLearner):
         
         # if desired, also keep track of all evaluables and/or their fitness.                        
         if self.storeAllEvaluated:
-            if self.wasUnwrapped:            
+            if self._wasUnwrapped:            
                 self._allEvaluated.append(self.wrappingEvaluable.copy())
-            elif self.wasWrapped:            
+            elif self._wasWrapped:            
                 self._allEvaluated.append(evaluable.params.copy())
             else:            
                 self._allEvaluated.append(evaluable.copy())        
         if self.storeAllEvaluations:
-            if self.wasOpposed and isscalar(res):
+            if self._wasOpposed and isscalar(res):
                 self._allEvaluations.append(-res)
             else:
                 self._allEvaluations.append(res)
@@ -232,22 +268,38 @@ class ContinuousOptimizer(BlackBoxOptimizer):
         """ If the parameters are wrapped, we keep track of the wrapper explicitly. """
         if isinstance(evaluable, ParameterContainer):
             self.wrappingEvaluable = evaluable.copy()
-            self.wasUnwrapped = True
+            self._wasUnwrapped = True
         elif not (evaluable is None 
                   or isinstance(evaluable, list) 
                   or isinstance(evaluable, ndarray)):
             raise ValueError('Continuous optimization algorithms require a list, array or'+\
                              ' ParameterContainer as evaluable.')
         BlackBoxOptimizer._setInitEvaluable(self, evaluable)
-        self.wasWrapped = False
+        self._wasWrapped = False
         self._initEvaluable = self._initEvaluable.params.copy()     
         
     def _bestFound(self):
         """ return the best found evaluable and its associated fitness. """
         bestE, bestF = BlackBoxOptimizer._bestFound(self)
-        if self.wasUnwrapped:
+        if self._wasUnwrapped:
             self.wrappingEvaluable._setParameters(bestE)
             bestE = self.wrappingEvaluable.copy()
         return bestE, bestF
    
     
+class TopologyOptimizer(BlackBoxOptimizer):
+    """ A class of algorithms that changes the topology as well as the parameters.
+    It does not accept an arbitrary Evolvable as initial point, only a 
+    ParameterContainer (or a continuous vector). """
+        
+    def _setInitEvaluable(self, evaluable):
+        BlackBoxOptimizer._setInitEvaluable(self, evaluable)
+        # distinguish modules from parameter containers.
+        if not isinstance(evaluable, TopologyEvolvable):
+            if isinstance(evaluable, Module):
+                self._initEvaluable = MaskedModule(self._initEvaluable)
+            else:
+                self._initEvaluable = MaskedParameters(self._initEvaluable, returnZeros = True)   
+    
+     
+        

@@ -14,7 +14,7 @@ class XMLHandling:
     """
     
     def __init__(self, filename, newfile):
-        """ @param newfile: is the file to be read or is it a new file? """
+        """ :key newfile: is the file to be read or is it a new file? """
         self.filename = filename
         if not newfile:
             self.dom = parse(filename)
@@ -32,7 +32,7 @@ class XMLHandling:
             
     def readAttrDict(self, node, transform = None):    
         """ read a dictionnary of attributes 
-        @param transform: optionally function transforming the attribute values on reading """
+        :key transform: optionally function transforming the attribute values on reading """
         args = {}    
         for name, val in node.attributes.items():            
             name = str(name)
@@ -43,8 +43,9 @@ class XMLHandling:
         return args        
     
     def writeAttrDict(self, node, adict, transform = None):
-        """ read a dictionnary of attributes 
-        @param transform: optionally transform the attribute values on writing """
+        """ read a dictionnary of attributes
+        
+        :key transform: optionally transform the attribute values on writing """
         for name, val in adict.items():
             if val != None:
                 if transform != None:
@@ -78,7 +79,8 @@ class XMLHandling:
     def findNode(self, name, index = 0, root = None):
         """ return the toplevel node with the provided name (if there are more, choose the 
         index corresponding one). """
-        if root == None: root = self.root
+        if root == None: 
+            root = self.root
         for n in root.childNodes:
             if n.nodeName == name:
                 if index == 0:
@@ -88,7 +90,8 @@ class XMLHandling:
         
     def findNamedNode(self, name, nameattr, root = None):
         """ return the toplevel node with the provided name, and the fitting 'name' attribute. """
-        if root == None: root = self.root
+        if root == None: 
+            root = self.root
         for n in root.childNodes:
             if n.nodeName == name:
                 if 'name' in n.attributes:
@@ -124,7 +127,7 @@ class XMLHandling:
 def baseTransform(val):
     """ back-conversion: modules are encoded by their name
     and classes by the classname """
-    from pybrain.structure.module import Module
+    from pybrain.structure.modules.module import Module
     from inspect import isclass
     
     if isinstance(val, Module):

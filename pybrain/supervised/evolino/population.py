@@ -23,14 +23,14 @@ class EvolinoPopulation(Population):
         A subpopulation of size subPopulationSize is created for each of these
         chromosomes.
         
-        @param nCombinations: Denotes the number of times each subindividual should
+        :key nCombinations: Denotes the number of times each subindividual should
                               be built into an individual. default=1
-        @param valueInitializer: 
+        :key valueInitializer: 
     """
-    def __init__(self, individual, subPopulationSize, nCombinations=1, valueInitializer=Randomization(-0.1,0.1), **kwargs):
-        """ @param individual: A prototype individual which is used to determine
+    def __init__(self, individual, subPopulationSize, nCombinations=1, valueInitializer=Randomization(-0.1, 0.1), **kwargs):
+        """ :key individual: A prototype individual which is used to determine
                                the structure of the genome.
-            @param subPopulationSize: integer describing the size of the subpopulations
+            :key subPopulationSize: integer describing the size of the subpopulations
         """
         Population.__init__(self)
 
@@ -40,14 +40,14 @@ class EvolinoPopulation(Population):
 
         ap = KWArgsProcessor(self, kwargs)
 
-        ap.add( 'verbosity', default=0 )
+        ap.add('verbosity', default=0)
 
 
 
         genome = individual.getGenome()
         for chromosome in genome:
             self._subPopulations.append(
-                EvolinoSubPopulation(chromosome, subPopulationSize, valueInitializer) )
+                EvolinoSubPopulation(chromosome, subPopulationSize, valueInitializer))
 
     def getIndividuals(self):
         """ Returns a set of individuals of type EvolinoIndividual. The individuals
@@ -74,15 +74,15 @@ class EvolinoPopulation(Population):
             for _ in range(nIndividuals):
                 subIndividualCombination = []
                 for subIndividuals in subIndividualsList:
-                    sub_individual = subIndividuals.pop( randrange( len( subIndividuals ) ) )
-                    subIndividualCombination.append( sub_individual )
-                individuals.add( EvolinoIndividual(subIndividualCombination) )
+                    sub_individual = subIndividuals.pop(randrange(len(subIndividuals)))
+                    subIndividualCombination.append(sub_individual)
+                individuals.add(EvolinoIndividual(subIndividualCombination))
 
         return individuals
 
     def getSubPopulations(self):
         """ Returns a shallow copy of the list of subpopulation. """
-        return copy( self._subPopulations )
+        return copy(self._subPopulations)
 
 
 
@@ -103,11 +103,11 @@ class EvolinoPopulation(Population):
 
         # max fitness distribution
         subIndividuals = individual.getSubIndividuals()
-        for i,sp in enumerate(self._subPopulations):
+        for i, sp in enumerate(self._subPopulations):
             sub_individual = subIndividuals[i]
-            old_fitness = sp.getIndividualFitness( sub_individual )
+            old_fitness = sp.getIndividualFitness(sub_individual)
             if old_fitness < fitness:
-                sp.setIndividualFitness( sub_individual, fitness )
+                sp.setIndividualFitness(sub_individual, fitness)
 
 
 
@@ -131,15 +131,15 @@ class EvolinoSubPopulation(SimplePopulation):
         The genomes of these clones are then randomized by the Randomization
         operator.
     """
-    def __init__(self, chromosome, maxNIndividuals, valueInitializer=Randomization(-0.1,0.1), **kwargs):
-        """ @param chromosome: The prototype chromosome
-            @param maxNIndividuals: The maximum allowed number of individuals
+    def __init__(self, chromosome, maxNIndividuals, valueInitializer=Randomization(-0.1, 0.1), **kwargs):
+        """ :key chromosome: The prototype chromosome
+            :key maxNIndividuals: The maximum allowed number of individuals
         """
         SimplePopulation.__init__(self)
 
         self._prototype = EvolinoSubIndividual(chromosome)
 
-        self._maxNIndividuals  = maxNIndividuals
+        self._maxNIndividuals = maxNIndividuals
         self._valueInitializer = valueInitializer
 
 
@@ -163,7 +163,7 @@ class EvolinoSubPopulation(SimplePopulation):
 
     def addIndividualFitness(self, individual, fitness):
         """ Add fitness to the individual's fitness value.
-            @param fitness: a float value denoting the fitness
+            :key fitness: a float value denoting the fitness
         """
         self._fitness[individual] += fitness
 

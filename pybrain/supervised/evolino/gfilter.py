@@ -9,7 +9,7 @@ class Filter(object):
     """
     def __init__(self):
         pass
-    def apply(self,population):
+    def apply(self, population):
         """ Applies an operation on a population. """
         raise NotImplementedError()
 
@@ -30,19 +30,20 @@ class SimpleGenomeManipulation(Filter):
     def _manipulateGenome(self, genome, manfunc=None):
         """ Manipulates the genome inplace by calling the abstract _manipulateValue()
             method on each float found.
-            @param genome: Arbitrary netsted iterateable container whose leaf
+            
+            :key genome: Arbitrary netsted iterateable container whose leaf
                            elements may be floats or empty containers.
                            E.g. [ [1.] , [1. , 2. , 2 , [3. , 4.] ] , [] ]
-            @param manfunc: function that manipulates the found floats.
+            :key manfunc: function that manipulates the found floats.
                             If omitted, self._manipulateValue() is used.
                             See its documentation for the signature description.
         """
         assert isiter(genome)
         if manfunc is None:  manfunc = self._manipulateValue
 
-        for i,v in enumerate(genome):
+        for i, v in enumerate(genome):
             if isiter(v):
-                self._manipulateGenome(v,manfunc)
+                self._manipulateGenome(v, manfunc)
             else:
                 genome[i] = manfunc(v)
 
@@ -60,24 +61,26 @@ class SimpleMutation(SimpleGenomeManipulation):
         for mutation.
     """
     def __init__(self):
-        """ @param kwargs: See setArgs() method documentation
+        """ :key kwargs: See setArgs() method documentation
         """
         SimpleGenomeManipulation.__init__(self)
         self.mutationVariate = GaussianVariate()
         self.mutationVariate.alpha = 0.1
-        self.verbosity=0
+        self.verbosity = 0
 
 
     def apply(self, population):
         """ Apply the mutation to the population
-            @param population: must implement the getIndividuals() method
+        
+            :key population: must implement the getIndividuals() method
         """
         for individual in population.getIndividuals():
             self._mutateIndividual(individual)
 
     def _mutateIndividual(self, individual):
         """ Mutate a single individual
-            @param individual: must implement the getGenome() method
+        
+            :key individual: must implement the getGenome() method
         """
         genome = individual.getGenome()
         self._manipulateGenome(genome)
@@ -106,7 +109,7 @@ class Randomization(SimpleGenomeManipulation):
         self._maxval = maxval
 
     def apply(self, population):
-        self._uniform_variate = UniformVariate(self._minval,self._maxval)
+        self._uniform_variate = UniformVariate(self._minval, self._maxval)
         for individual in population.getIndividuals():
             self._manipulateGenome(individual.getGenome())
 

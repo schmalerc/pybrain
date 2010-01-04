@@ -16,8 +16,8 @@ class SVMUnit(object):
     def __init__(self, indim=0, outdim=0, model=None):
         """ Initializes as empty module. 
         
-        If `model`is given, initialize using this LIBSVM model instead. `indim`
-        and `outdim` are for compatibility only currently, and ignored."""
+        If `model` is given, initialize using this LIBSVM model instead. `indim`
+        and `outdim` are for compatibility only, and ignored."""
         self.reset()
         # set some dummy input/ouput dimensions - these become obsolete when 
         # the SVM is initialized
@@ -51,10 +51,10 @@ class SVMUnit(object):
         These are stored in a dictionary for multi-class SVM. If `prob`, class
         probabilities are produced. This works only if probability option was
         set for SVM training."""            
-        if values=="class" or values==False:
+        if values == "class" or values == False:
             # predict the output class right away
             self.output = self.model.predict(self.input)
-        elif values=='raw' or values==True:
+        elif values == 'raw' or values == True:
             # return a dict of decision values for each one-on-one class 
             # combination (i,j)
             self.output = self.model.predict_values(self.input)
@@ -65,12 +65,13 @@ class SVMUnit(object):
     def activateOnDataset(self, dataset, values=False):
         """ Run the module's forward pass on the given dataset unconditionally
         and return the output as a list.
-        @param dataset: A non-sequential supervised data set. 
-        @param values: Passed trough to forwardPass() method."""
+
+        :arg dataset: A non-sequential supervised data set. 
+        :key values: Passed trough to forwardPass() method."""
         out = []
         inp = dataset['input']
         for i in range(inp.shape[0]):
-            self.input = inp[i,:]
+            self.input = inp[i, :]
             # carry out forward pass to get decision values for each class combo
             self.forwardPass(values=values)
             out.append(self.output) 
@@ -80,3 +81,4 @@ class SVMUnit(object):
         """ return number of classes the current model uses """
         return self.model.get_nr_class()
     
+

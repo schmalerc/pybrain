@@ -23,7 +23,8 @@ class ParameterContainer(Evolvable):
     
     def __init__(self, paramdim = 0, **args):
         """ initialize all parameters with random values, normally distributed around 0
-            @param stdParams: standard deviation of the values (default: 1). 
+        
+            :key stdParams: standard deviation of the values (default: 1). 
         """
         self.setArgs(**args)
         self.paramdim = paramdim
@@ -48,27 +49,34 @@ class ParameterContainer(Evolvable):
         return self.paramdim
     
     def _setParameters(self, p, owner = None):
-        """ @param p: an array of numbers """
-        assert self.owner == owner
+        """ :key p: an array of numbers """
         if isinstance(p, list):
             p = array(p)
-        assert isinstance(p, ndarray)        
-        self._params = p
-        self.paramdim = size(self.params)
+        assert isinstance(p, ndarray)      
+          
+        if self.owner == self:
+            # the object owns it parameter array, which means it cannot be set, 
+            # only updated with new values.  
+            self._params[:] = p
+        elif self.owner != owner:
+            raise Exception("Parameter ownership mismatch: cannot set to new array.")
+        else:
+            self._params = p
+            self.paramdim = size(self.params)
                 
     @property
     def derivs(self):
-        """ @rtype: an array of numbers. """
+        """ :rtype: an array of numbers. """
         return self._derivs
     
     def _setDerivatives(self, d, owner = None):
-        """ @param d: an array of numbers of self.paramdim """
+        """ :key d: an array of numbers of self.paramdim """
         assert self.owner == owner
         assert size(d) == self.paramdim
         self._derivs = d
     
     def resetDerivatives(self):
-        """ @note: this method only sets the values to zero, it does not initialize the array. """
+        """ :note: this method only sets the values to zero, it does not initialize the array. """
         assert self.hasDerivatives
         self._derivs *= 0
     

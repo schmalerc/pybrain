@@ -20,20 +20,20 @@ class EvolinoEvaluation(Filter):
     """
 
     def __init__(self, evolino_network, dataset, **kwargs):
-        """ @param evolino_network: an instance of NetworkWrapper()
-            @param dataset: The evaluation dataset
-            @param evalfunc: Compares output to target values and returns a scalar, denoting the fitness.
+        """ :key evolino_network: an instance of NetworkWrapper()
+            :key dataset: The evaluation dataset
+            :key evalfunc: Compares output to target values and returns a scalar, denoting the fitness.
                              Defaults to -mse(output, target).
-            @param wtRatio: Float array of two values denoting the ratio between washout and training length.
+            :key wtRatio: Float array of two values denoting the ratio between washout and training length.
                             Defaults to [1,2]
-            @param verbosity: Verbosity level. Defaults to 0
+            :key verbosity: Verbosity level. Defaults to 0
         """
         Filter.__init__(self)
         ap = KWArgsProcessor(self, kwargs)
 
-        ap.add( 'verbosity', default=0 )
-        ap.add( 'evalfunc',  default=lambda output, target: -Validator.MSE(output, target) )
-        ap.add( 'wtRatio',   default=array([1,2], float) )
+        ap.add('verbosity', default=0)
+        ap.add('evalfunc', default=lambda output, target:-Validator.MSE(output, target))
+        ap.add('wtRatio', default=array([1, 2], float))
 
         self.network = evolino_network
         self.dataset = dataset
@@ -43,24 +43,25 @@ class EvolinoEvaluation(Filter):
     def _evaluateNet(self, net, dataset, wtRatio):
         """ Evaluates the performance of net on the given dataset.
             Returns the fitness value.
-            @param net: Instance of EvolinoNetwork to evaluate
-            @param dataset: Sequences to test the net on
-            @param wtRatio: See __init__
+            
+            :key net: Instance of EvolinoNetwork to evaluate
+            :key dataset: Sequences to test the net on
+            :key wtRatio: See __init__
         """
 
         # === extract sequences from dataset ===
         numSequences = dataset.getNumSequences()
-        washout_sequences  = []
+        washout_sequences = []
         training_sequences = []
         for i in xrange(numSequences):
             sequence = dataset.getSequence(i)[1]
-            training_start   = int( wtRatio * len(sequence) )
-            washout_sequences.append(  sequence[                  : training_start   ] )
-            training_sequences.append( sequence[ training_start   :                  ] )
+            training_start = int(wtRatio * len(sequence))
+            washout_sequences.append(sequence[                  : training_start   ])
+            training_sequences.append(sequence[ training_start   :                  ])
 
 
         # === collect raw output (denoted by phi) ===
-        phis    = []
+        phis = []
         for i in range(numSequences):
             net.reset()
             net.washout(washout_sequences[i])
@@ -69,10 +70,10 @@ class EvolinoEvaluation(Filter):
 
 
         # === calculate and set weights of linear output layer ===
-        PHI     = concatenate(phis).T
+        PHI = concatenate(phis).T
         PHI_INV = pinv2(PHI)
-        TARGET  = concatenate(training_sequences).T
-        W       = dot(TARGET, PHI_INV)
+        TARGET = concatenate(training_sequences).T
+        W = dot(TARGET, PHI_INV)
         net.setOutputWeightMatrix(W)
 
 
@@ -96,7 +97,8 @@ class EvolinoEvaluation(Filter):
     def apply(self, population):
         """ Evaluate each individual, and store fitness inside population.
             Also calculate and set the weight matrix W of the linear output layer.
-            @param population: Instance of EvolinoPopulation
+            
+            :arg population: Instance of EvolinoPopulation
         """
         net = self.network
         dataset = self.dataset
@@ -109,7 +111,7 @@ class EvolinoEvaluation(Filter):
         for individual in population.getIndividuals():
 
             # load the individual's genome into the weights of the net
-            net.setGenome( individual.getGenome() )
+            net.setGenome(individual.getGenome())
             fitness = self._evaluateNet(net, dataset, self.wtRatio)
             if self.verbosity > 1:
                 print "Calculated fitness for individual", id(individual), " is ", fitness
@@ -119,11 +121,11 @@ class EvolinoEvaluation(Filter):
 
             if best_fitness < fitness:
                 best_fitness = fitness
-                best_genome  = deepcopy(individual.getGenome())
-                best_W       = deepcopy(net.getOutputWeightMatrix())
+                best_genome = deepcopy(individual.getGenome())
+                best_W = deepcopy(net.getOutputWeightMatrix())
 
         net.reset()
-        net.setGenome( best_genome )
+        net.setGenome(best_genome)
         net.setOutputWeightMatrix(best_W)
 
 
@@ -149,7 +151,8 @@ class EvolinoSelection(Filter):
     def apply(self, population):
         """ The subpopulations of the EvolinoPopulation are iterated and forwarded
             to the EvolinoSubSelection() operator.
-            @param population: object of type EvolinoPopulation
+            
+            :arg population: object of type EvolinoPopulation
         """
         self.sub_selection.nParents = self.nParents
         for sp in population.getSubPopulations():
@@ -161,7 +164,7 @@ class EvolinoSelection(Filter):
 class EvolinoReproduction(Filter):
     """ Evolino's reproduction operator """
     def __init__(self, **kwargs):
-        """ @param **kwargs: will be forwarded to the EvolinoSubReproduction constructor
+        """ :key **kwargs: will be forwarded to the EvolinoSubReproduction constructor
         """
         Filter.__init__(self)
         self._kwargs = kwargs
@@ -170,7 +173,8 @@ class EvolinoReproduction(Filter):
     def apply(self, population):
         """ The subpopulations of the EvolinoPopulation are iterated and forwarded
             to the EvolinoSubReproduction() operator.
-            @param population: object of type EvolinoPopulation
+            
+            :arg population: object of type EvolinoPopulation
         """
         sps = population.getSubPopulations()
         reproduction = EvolinoSubReproduction(**self._kwargs)
@@ -181,7 +185,7 @@ class EvolinoReproduction(Filter):
 class EvolinoBurstMutation(Filter):
     """ The burst mutation operator for evolino """
     def __init__(self, **kwargs):
-        """ @param **kwargs: will be forwarded to the EvolinoSubReproduction constructor
+        """ :key **kwargs: will be forwarded to the EvolinoSubReproduction constructor
         """
         Filter.__init__(self)
         self._kwargs = kwargs
@@ -194,7 +198,7 @@ class EvolinoBurstMutation(Filter):
         """
         sps = population.getSubPopulations()
         for sp in sps:
-            n_toremove = sp.getIndividualsN()-1
+            n_toremove = sp.getIndividualsN() - 1
             sp.removeWorstIndividuals(n_toremove)
             reproduction = EvolinoSubReproduction(**self._kwargs)
             reproduction.apply(sp)
@@ -218,14 +222,14 @@ class EvolinoSubSelection(Filter):
 
         n = population.getIndividualsN()
         if self.nParents is None:
-            nKeep = n/4
+            nKeep = n / 4
         else:
             nKeep = self.nParents
 
         assert nKeep >= 0
         assert nKeep <= n
 
-        population.removeWorstIndividuals(n-nKeep)
+        population.removeWorstIndividuals(n - nKeep)
 
 
 
@@ -235,16 +239,16 @@ class EvolinoSubReproduction(Filter):
     """ Reproduction operator for EvolinoSubPopulation objects.
     """
     def __init__(self, **kwargs):
-        """ @param verbosity: Verbosity level
-            @param mutationVariate: Variate used for mutation. Defaults to None
-            @param mutation: Defaults to EvolinoSubMutation
+        """ :key verbosity: Verbosity level
+            :key mutationVariate: Variate used for mutation. Defaults to None
+            :key mutation: Defaults to EvolinoSubMutation
         """
         Filter.__init__(self)
 
         ap = KWArgsProcessor(self, kwargs)
-        ap.add( 'verbosity',       default=0 )
-        ap.add( 'mutationVariate', default=None )
-        ap.add( 'mutation',        default=EvolinoSubMutation() )
+        ap.add('verbosity', default=0)
+        ap.add('mutationVariate', default=None)
+        ap.add('mutation', default=EvolinoSubMutation())
 
         if self.mutationVariate is not None:
             self.mutation.mutationVariate = self.mutationVariate
@@ -257,17 +261,17 @@ class EvolinoSubReproduction(Filter):
             Then clones the fittest individuals (=parents), mutates these clones
             and adds them to the population.
         """
-        max_n     = population.getMaxNIndividuals()
-        n         = population.getIndividualsN()
+        max_n = population.getMaxNIndividuals()
+        n = population.getIndividualsN()
         freespace = max_n - n
 
         best = population.getBestIndividualsSorted(freespace)
-        children=set()
+        children = set()
         while True:
-            if len(children)>=freespace: break
+            if len(children) >= freespace: break
             for parent in best:
-                children.add( parent.copy() )
-                if len(children)>=freespace: break
+                children.add(parent.copy())
+                if len(children) >= freespace: break
 
         dummy_population = SimplePopulation()
         dummy_population.addIndividuals(children)
@@ -288,7 +292,7 @@ class EvolinoSubMutation(SimpleMutation):
         SimpleMutation.__init__(self)
 
         ap = KWArgsProcessor(self, kwargs)
-        ap.add( 'mutationVariate', default=CauchyVariate() )
+        ap.add('mutationVariate', default=CauchyVariate())
         self.mutationVariate.alpha = 0.001
 
 

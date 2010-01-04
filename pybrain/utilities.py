@@ -23,6 +23,7 @@ known_extensions = {
     'svm': 'libsvm',
     'pkl': 'pickle',
     'nc' : 'netcdf' }
+
     
 def abstractMethod():
     """ This should be called when an abstract method is called that should have been 
@@ -40,13 +41,15 @@ def combineLists(lsts):
     return new
 
 
-def drawIndex(probs, tolerant = False):
-    """ draws an index given an array of probabilities """
+def drawIndex(probs, tolerant=False):
+    """ Draws an index given an array of probabilities.
+    
+    :key tolerant: if set to True, the array is normalized to sum to 1.  """
     if not sum(probs) < 1.00001 or not sum(probs) > 0.99999:
         if tolerant:
             probs /= sum(probs)
         else:
-            print probs, 1-sum(probs)
+            print probs, 1 - sum(probs)
             raise ValueError()
     r = random()
     s = 0
@@ -57,8 +60,8 @@ def drawIndex(probs, tolerant = False):
     return choice(range(len(probs)))
 
 
-def drawGibbs(vals, temperature = 1.):
-    """ return the index of the sample drawn by a softmax. """
+def drawGibbs(vals, temperature=1.):
+    """ Return the index of the sample drawn by a softmax (Gibbs). """
     if temperature == 0:
         # randomly pick one of the values with the max value.
         m = max(vals)
@@ -90,12 +93,12 @@ def iterCombinations(tup):
     elif len(tup) > 1:
         for prefix in iterCombinations(tup[:-1]):
             for i in range(tup[-1]):
-                yield tuple(list(prefix)+[i])
+                yield tuple(list(prefix) + [i])
 
     
 def setAllArgs(obj, argdict):
     """ set all those internal variables which have the same name than an entry in the 
-    given object's dictionnary. 
+    given object's dictionary. 
     This function can be useful for quick initializations. """
     
     xmlstore = isinstance(obj, XMLBuildable)
@@ -111,16 +114,17 @@ def setAllArgs(obj, argdict):
                     obj._unknown_argdict = {}
                 obj._unknown_argdict[n] = argdict[n]
                 
+                
 def linscale(d, lim):
     """ utility function to linearly scale array d to the interval defined by lim """
-    return (d-d.min())*(lim[1]-lim[0]) + lim[0]
+    return (d - d.min())*(lim[1] - lim[0]) + lim[0]
 
 
 def percentError(out, true):
     """ return percentage of mismatch between out and target values (lists and arrays accepted) """
     arrout = array(out).flatten()
-    wrong = where(arrout!=array(true).flatten())[0].size
-    return 100.*float(wrong)/float(arrout.size)
+    wrong = where(arrout != array(true).flatten())[0].size
+    return 100. * float(wrong) / float(arrout.size)
 
 
 def formatFromExtension(fname):
@@ -129,7 +133,7 @@ def formatFromExtension(fname):
     if not ext: 
         return None
     try:
-        format = known_extensions[ext.replace('.','')]
+        format = known_extensions[ext.replace('.', '')]
     except KeyError:
         format = None
     return format
@@ -189,7 +193,7 @@ class Serializable(object):
         if format is None:
             # try to derive protocol from file extension
             format = formatFromExtension(filename)
-        with file(filename,'rbU') as fp:
+        with file(filename, 'rbU') as fp:
             obj = cls.loadFromFileLike(fp, format)
             obj.filename = filename
             return obj
@@ -230,14 +234,14 @@ class Named(XMLBuildable):
     
     def _generateName(self):
         """Return a unique name for this object."""
-        return "%s-%i" % (self.__class__.__name__,  self._nameIds.next())
+        return "%s-%i" % (self.__class__.__name__, self._nameIds.next())
         
     def __repr__(self):
         """ The default representation of a named object is its name. """
         return "<%s '%s'>" % (self.__class__.__name__, self.name)
 
     
-def fListToString( a_list, a_precision = 3 ):
+def fListToString(a_list, a_precision=3):
     """ returns a string representing a list of floats with a given precision """
     # CHECKME: please tell me if you know a more comfortable way.. (print format specifier?)
     l_out = "["
@@ -250,7 +254,7 @@ def fListToString( a_list, a_precision = 3 ):
 def tupleRemoveItem(tup, index):
     """ remove the item at position index of the tuple and return a new tuple. """
     l = list(tup)
-    return tuple(l[:index]+l[index+1:])
+    return tuple(l[:index] + l[index + 1:])
 
 
 def confidenceIntervalSize(stdev, nbsamples):
@@ -258,7 +262,7 @@ def confidenceIntervalSize(stdev, nbsamples):
     t-test-percentile: 97.5%, infinitely many degrees of freedom,
     therefore on the two-sided interval: 95% """
     # CHECKME: for better precision, maybe get the percentile dynamically, from the scipy library?
-    return 2*1.98*stdev/sqrt(nbsamples)   
+    return 2 * 1.98 * stdev / sqrt(nbsamples)   
     
     
 def trace(func):
@@ -268,7 +272,7 @@ def trace(func):
     return inner
     
     
-def threaded(callback=lambda *args, **kwargs: None, daemonic=False):
+def threaded(callback=lambda * args, **kwargs: None, daemonic=False):
     """Decorate  a function to run in its own thread and report the result
     by calling callback with it."""
     def innerDecorator(func):
@@ -282,7 +286,7 @@ def threaded(callback=lambda *args, **kwargs: None, daemonic=False):
     
     
 def garbagecollect(func):
-    """Decorate a function to invoke the garbage collecter after each execution.
+    """Decorate a function to invoke the garbage collector after each execution.
     """
     def inner(*args, **kwargs):
         result = func(*args, **kwargs)
@@ -310,7 +314,7 @@ def memoize(func):
     return inner
 
 
-def storeCallResults(obj, verbose = False):
+def storeCallResults(obj, verbose=False):
     """Pseudo-decorate an object to store all evaluations of the function in the returned list."""
     results = []    
     oldcall = obj.__class__.__call__
@@ -358,34 +362,46 @@ def _import(name):
 # tools for binary Gray code manipulation:
 
 def int2gray(i):
-    """ return the value of val in Gray encoding."""
+    """ Returns the value of an integer in Gray encoding."""
     return i ^ (i >> 1)
 
     
 def gray2int(g, size):
-    """ transform a gray code back into an integer """
+    """ Transforms a Gray code back into an integer. """
     res = 0
     for i in reversed(range(size)):
-        gi = (g>>i)%2
-        if i == size -1:
+        gi = (g >> i) % 2
+        if i == size - 1:
             bi = gi
         else:
             bi = bi ^ gi
-        res += bi * 2**i
+        res += bi * 2 ** i
     return res
 
     
 def asBinary(i):
-    """ produce a string of an integers binary representation.
+    """ Produces a string from an integer's binary representation.
     (preceding zeros removed). """
     if i > 1:
-        if i%2 == 1:
-            return asBinary(i>>1)+'1'
+        if i % 2 == 1:
+            return asBinary(i >> 1) + '1'
         else:
-            return asBinary(i>>1)+'0'
+            return asBinary(i >> 1) + '0'
     else:
         return str(i)    
+    
+    
+def one_to_n(val, maxval):
+    """ Returns a 1-in-n binary encoding of a non-negative integer. """
+    a = zeros(maxval, float)
+    a[val] = 1.
+    return a
 
+
+def n_to_one(arr):
+    """ Returns the reverse of a 1-in-n binary encoding. """
+    return where(arr == 1)[0][0]
+    
 
 def canonicClassString(x):
     """ the __class__ attribute changed from old-style to new-style classes... """
@@ -401,14 +417,14 @@ def decrementAny(tup):
     res = []
     for i, x in enumerate(tup):
         if x > 0:
-            res.append(tuple(list(tup[:i])+[x-1]+list(tup[i+1:])))
+            res.append(tuple(list(tup[:i]) + [x - 1] + list(tup[i + 1:])))
     return res
     
     
 def reachable(stepFunction, start, destinations):
-    """ determine the subset of destinations that can be reached from a set of starting positions,
+    """ Determines the subset of destinations that can be reached from a set of starting positions,
     while using stepFunction (which produces a list of neighbor states) to navigate. 
-    Use breadth-first search. """
+    Uses breadth-first search. """
     if len(start) == 0:
         return {}
     
@@ -433,19 +449,19 @@ def reachable(stepFunction, start, destinations):
     
     # adjust distances
     for k, val in deeper.items():
-        res[k] = val+1
+        res[k] = val + 1
     return res
     
     
 def crossproduct(ss, row=None, level=0):
-    """Return the crossproduct of the sets given in `ss`."""
+    """Returns the cross-product of the sets given in `ss`."""
     if row is None:
         row = []
     if len(ss) > 1:
-        return reduce(operator.add, 
-                      [crossproduct(ss[1:],row+[i],level+1) for i in ss[0]])
+        return reduce(operator.add,
+                      [crossproduct(ss[1:], row + [i], level + 1) for i in ss[0]])
     else:
-        return [row+[i] for i in ss[0]]
+        return [row + [i] for i in ss[0]]
 
 
 def permute(arr, permutation):
@@ -509,37 +525,37 @@ def permuteToBlocks2d(arr, blockheight, blockwidth):
         
 
 def triu2flat(m):
-    """ Flatten an upper triangular matrix, returning a vector of the 
+    """ Flattens an upper triangular matrix, returning a vector of the 
     non-zero elements. """
     dim = m.shape[0]
-    res = zeros(dim*(dim+1)/2)
+    res = zeros(dim * (dim + 1) / 2)
     index = 0
     for row in range(dim):
-        res[index:index+dim-row] = m[row, row:]
-        index += dim-row
+        res[index:index + dim - row] = m[row, row:]
+        index += dim - row
     return res
 
 
 def flat2triu(a, dim):
-    """ Produce an upper triangular matrix of dimension dim from the elements of the given vector. """
+    """ Produces an upper triangular matrix of dimension dim from the elements of the given vector. """
     res = zeros((dim, dim))
     index = 0
     for row in range(dim):
-        res[row, row:] = a[index:index+dim-row]
-        index += dim-row
+        res[row, row:] = a[index:index + dim - row]
+        index += dim - row
     return res
 
 
 def blockList2Matrix(l):
-    """ Convert a list of matrices into a corresponding big block-diagonal one. """
+    """ Converts a list of matrices into a corresponding big block-diagonal one. """
     dims = [m.shape[0] for m in l]
     s = sum(dims)
-    res = zeros((s,s))
+    res = zeros((s, s))
     index = 0
     for i in range(len(l)):
         d = dims[i]
         m = l[i]
-        res[index:index+d, index:index+d] = m
+        res[index:index + d, index:index + d] = m
         index += d
     return res
 
@@ -556,13 +572,13 @@ def blockCombine(l):
     for i, row in enumerate(l):
         hindex = 0
         for j, m in enumerate(row):
-            res[vindex:vindex +vdims[i], hindex:hindex+hdims[j]] = m
+            res[vindex:vindex + vdims[i], hindex:hindex + hdims[j]] = m
             hindex += hdims[j]
         vindex += vdims[i]
     return res
 
 
-def avgFoundAfter(decreasingTargetValues, listsOfActualValues, batchSize = 1):
+def avgFoundAfter(decreasingTargetValues, listsOfActualValues, batchSize=1):
     """ Determine the average number of steps to reach a certain value (for the first time),
     given a list of value sequences. 
     If a value is not always encountered, the length of the longest sequence is used.
@@ -584,9 +600,49 @@ def avgFoundAfter(decreasingTargetValues, listsOfActualValues, batchSize = 1):
             if not found:
                 lres.append(longest)
     tmp = array(res)
-    summed = sum(tmp, axis = 0)[1:]
-    return summed/float(numLists)*batchSize
+    summed = sum(tmp, axis=0)[1:]
+    return summed / float(numLists) * batchSize
 
 
 class DivergenceError(Exception):
     """ Raised when an algorithm diverges. """
+    
+
+def matchingDict(d, selection):
+    """ Determines if the dictionary d conforms to the specified selection,
+    i.e. if a (key, x) is in the selection, then if key is in d as well it must be x 
+    or contained in x (if x is a list). """
+    for k, v in selection.items():
+        if k in d:
+            if isinstance(v, list):
+                if d[k] not in v:
+                    return False
+            else:
+                if d[k] != v:
+                    return False
+    return True
+
+
+def subDict(d, allowedkeys, flip=False):
+    """ Returns a new dictionary with a subset of the entries of d 
+    that have on of the (dis-)allowed keys."""
+    res = {}
+    for k, v in d.items():
+        if (k in allowedkeys) ^ flip:
+            res[k] = v
+    return res
+
+
+def dictCombinations(listdict):
+    """ Iterates over dictionaries that go through every possible combination 
+    of key-value pairs as specified in the lists of values for each key in listdict."""
+    listdict = listdict.copy()
+    if len(listdict) == 0:
+        return [{}]    
+    k, vs = listdict.popitem()
+    res = dictCombinations(listdict)            
+    if isinstance(vs, list):
+        res = [dict(d, **{k:v}) for d in res for v in sorted(set(vs))]        
+    else:
+        res = [dict(d, **{k:vs}) for d in res]
+    return res

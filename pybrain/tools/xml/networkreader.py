@@ -8,6 +8,12 @@ import pybrain #@UnusedImport
 from scipy import array #@UnusedImport
 
 
+try:
+    import arac.pybrainbridge #@UnusedImport
+except ImportError:
+    pass
+
+
 class NetworkReader(XMLHandling):
     """ A class that can take read a network from an XML file """
     
@@ -16,9 +22,10 @@ class NetworkReader(XMLHandling):
         
     @staticmethod
     def readFrom(filename, name = None, index = 0):
-        """ append the network to an existing xml file 
-        @param name: if this parameter is specified, read the network with this name
-        @param index: which network in the file shall be read (if there is more than one)
+        """ append the network to an existing xml file
+        
+        :key name: if this parameter is specified, read the network with this name
+        :key index: which network in the file shall be read (if there is more than one)
         """
         r = NetworkReader(filename, newfile = False)
         if name:

@@ -12,7 +12,7 @@ class EvolinoIndividual(Individual):
         The genome of an individual encodes the RNN's connection weights.
     """
     def __init__(self, sub_individuals):
-        """ @param sub_individuals: sequence (e.g. list) of sub-individuals
+        """ :key sub_individuals: sequence (e.g. list) of sub-individuals
         """
         self._sub_individuals = list(sub_individuals)
 
@@ -20,9 +20,9 @@ class EvolinoIndividual(Individual):
         """ Returns the genome created by concatenating the chromosomes supplied
             by the sub-individuals.
         """
-        genome=[]
+        genome = []
         for sub_individual in self._sub_individuals:
-            genome.append( deepcopy(sub_individual.getGenome()) )
+            genome.append(deepcopy(sub_individual.getGenome()))
         return genome
 
     def getSubIndividuals(self):
@@ -36,7 +36,7 @@ class EvolinoSubIndividual(Individual):
     """
     _next_id = 0
     def __init__(self, genome):
-        """ @param genome: Any kind of nested iteratable container containing
+        """ :key genome: Any kind of nested iteratable container containing
                            floats as leafs
         """
         self.setGenome(genome)
@@ -57,7 +57,7 @@ class EvolinoSubIndividual(Individual):
 
     def __copy__(self):
         """ Returns a complete copy of the individual. """
-        return EvolinoSubIndividual( deepcopy(self._genome) )
+        return EvolinoSubIndividual(deepcopy(self._genome))
 
 
 
