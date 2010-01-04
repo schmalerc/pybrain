@@ -173,6 +173,7 @@ if __name__ == '__main__':
     agent = LearningAgent(table, learner)
     agent.learner.explorer.epsilon = 0.5
     agent.learner.explorer.decay = 0.999995
+    
 
     # opponent strategy 'vary' changes randomly between 'defect', 'cooperate', 'random', 'tft' during training
     opponent = IPDOpponent('vary')
